@@ -7,3 +7,4 @@ resources:
 
 patchesStrategicMerge:
   - patches/kustomized-helm-plugin-sidecar-patch.yaml
+  - patches/enable-app-health-patch.yaml
