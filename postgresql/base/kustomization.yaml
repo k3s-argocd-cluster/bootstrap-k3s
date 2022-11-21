@@ -1,0 +1,8 @@
+resources:
+  - recover-volume-hook
+  - resources/initialization-config.yaml
+  - resources/config.yaml
+  - resources/secrets.yaml
+  - resources/persistent-volume-claim.yaml
+  - resources/deployment.yaml
+  - resources/service.yaml

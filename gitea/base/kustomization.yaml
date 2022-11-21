@@ -1,0 +1,6 @@
+resources:
+- recover-volume-hook
+- resources/persistent-volume-claim.yaml
+
+helmCharts:
+- name: gitea

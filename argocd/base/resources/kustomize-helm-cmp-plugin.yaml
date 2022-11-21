@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kustomize-helm-cmp-plugin
+  namespace: argocd
+data:
+  plugin.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: kustomize-helm-cmp-plugin
+    spec:
+      version: v1.0
+      init:
+        command: ["/bin/sh", "-c", 'helm dependency update $ARGOCD_ENV_MAIN_HELM_CHART_DIR']
+      generate:
+        command: ["/bin/sh", "-c"]
+        args: ["kustomize build --enable-helm"]
+      discover:
+        fileName: ".kustomize-helm"
+      allowConcurrency: true
+      lockRepo: true

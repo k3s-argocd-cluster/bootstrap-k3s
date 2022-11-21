@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: recover-volume
+  namespace: postgresql
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      serviceAccountName: recover-volume-hook
+      containers:
+      - name: volume-recover-kubectl-jq
+        image: portainer/kubectl-shell:latest-v1.21.1-arm64
+        command:
+          - "/scripts/recover_volume.sh"
+        volumeMounts:
+        - mountPath: /scripts
+          name: recover-volume-scripts
+      restartPolicy: Never
+      volumes:
+      - name: recover-volume-scripts
+        configMap:
+          name: recover-volume-script-config
+          defaultMode: 0777
+  backoffLimit: 2

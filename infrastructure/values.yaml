@@ -1,0 +1,6 @@
+spec:
+  destination:
+    name: in-cluster
+  source:
+    repoURL: git@github.com:k3s-argocd-cluster/bootstrap-k3s.git
+    targetRevision: master

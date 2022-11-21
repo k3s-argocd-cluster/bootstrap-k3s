@@ -1,0 +1,6 @@
+resources:
+  - recover-volume-service-account.yaml
+  - recover-volume-role.yaml
+  - recover-volume-role-binding.yaml
+  - recover-volume-script-config.yaml
+  - recover-volume-job.yaml

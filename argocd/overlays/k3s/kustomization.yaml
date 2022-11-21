@@ -1,0 +1,7 @@
+resources:
+  - ../../base
+
+patchesStrategicMerge:
+  - patches/argocd-cmd-params-cm-patch.yml
+
+namespace: argocd

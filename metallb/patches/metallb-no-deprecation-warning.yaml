@@ -1,0 +1,6 @@
+- op: replace
+  path: /spec/versions/1/deprecated
+  value: false
+
+- op: remove
+  path: /spec/versions/1/deprecationWarning

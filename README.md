@@ -1,0 +1,11 @@
+Bootstrap repository to enable ArgoCD to install and manage:
+- ArgoCD (k8s native continuous deployment)
+- metallB (k8s native load balancer)
+- sealed-secrets (Secrets can safely be committed to git, by Bitnami)
+- traefik (HTTP + HTTPS Ingress proxy)
+- Longhorn (Distributed Storage)
+- PostgreSQL (Open Source object-relational database)
+- netdata (central performance monitoring)
+- iobroker (Image by buanet, smarthome)
+- gitea (resource friendly central Git server with OCI repository)
+- pihole (DNS ad blocker)

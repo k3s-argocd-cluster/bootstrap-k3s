@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iobroker
+  namespace: iobroker
+  labels:
+    app.kubernetes.io/instance: iobroker
+    app.kubernetes.io/name: iobroker
+spec:
+  selector:
+    app.kubernetes.io/instance: iobroker-iobroker
+    app.kubernetes.io/name: iobroker
+  ports:
+  - name: iobroker
+    protocol: TCP
+    port: 8082
+    targetPort: 8081
+  type: ClusterIP
+  clusterIP: None

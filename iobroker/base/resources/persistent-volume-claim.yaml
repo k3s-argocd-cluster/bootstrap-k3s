@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iobroker-volume-claim
+  namespace: iobroker
+  labels:
+    app: iobroker
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: longhorn-durable
+  resources:
+    requests:
+      storage: 10Gi

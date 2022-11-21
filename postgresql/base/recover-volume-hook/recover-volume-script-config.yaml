@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recover-volume-script-config
+  namespace: postgresql
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+data:
+  recover_volume.sh: |
+    #!/bin/bash
+    PVC=`kubectl get pv -o json | jq -r .items[] | jq -c 'select(.spec.claimRef.namespace == "postgresql" and .status.phase == "Released")' | jq -r '.metadata.name'`
+    if [ -n "$PVC" ]
+    then
+      kubectl get pv -o json | jq -r .items[] | jq -c 'select(.spec.claimRef.namespace == "postgresql" and .status.phase == "Released")' | jq -r '.metadata.name' | xargs -n 1 kubectl patch pv --type json -p '[{"op": "remove", "path": "/spec/claimRef/uid"}]'
+    fi
