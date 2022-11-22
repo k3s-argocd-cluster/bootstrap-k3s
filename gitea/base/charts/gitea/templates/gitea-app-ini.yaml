@@ -7,4 +7,4 @@ metadata:
 data:
   server: |
     DOMAIN = git.yourdomain.test
-    ROOT_URL = http://git.yourdomain.test
+    ROOT_URL = https://git.yourdomain.test
