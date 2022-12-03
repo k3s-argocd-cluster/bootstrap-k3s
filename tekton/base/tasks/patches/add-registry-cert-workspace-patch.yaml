@@ -1,0 +1,6 @@
+- op: add
+  path: "/spec/workspaces/-"
+  value:
+    name: certificates
+    description: Holds additional certificates
+    optional: true

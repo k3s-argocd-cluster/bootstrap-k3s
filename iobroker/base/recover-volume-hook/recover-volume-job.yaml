@@ -12,7 +12,7 @@ spec:
       serviceAccountName: recover-volume-hook
       containers:
       - name: volume-recover-kubectl-jq
-        image: portainer/kubectl-shell:latest-v1.21.1-arm64
+        image: slig2008/kubectl-shell:latest-v1.21.1
         command:
           - "/scripts/recover_volume.sh"
         volumeMounts:

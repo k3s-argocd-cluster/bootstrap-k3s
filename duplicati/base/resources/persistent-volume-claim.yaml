@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: gitea-volume-claim
-  namespace: gitea
+  name: duplicati-volume-claim
+  namespace: duplicati
   labels:
-    app: gitea
+    app: duplicati
 spec:
   accessModes:
     - ReadWriteMany
   storageClassName: longhorn-durable
   resources:
     requests:
-      storage: 25Gi
+      storage: 10Gi

@@ -1,0 +1,7 @@
+resources:
+  - oci-build-multiarch-pipeline.yaml
+  - tekton-docker-credentials.yaml
+  - tekton-git-credentials.yaml
+  - tekton-certificates.yaml
+
+namespace: tekton

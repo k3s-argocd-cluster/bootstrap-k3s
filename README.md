@@ -9,3 +9,6 @@ Bootstrap repository to enable ArgoCD to install and manage:
 - iobroker (Image by buanet, smarthome)
 - gitea (resource friendly central Git server with OCI repository)
 - pihole (DNS ad blocker)
+- duplicati (Encrypted backups to anywhere you want)
+- tekton (k8s native build engine)
+- minio (S3 compatible bucket store)

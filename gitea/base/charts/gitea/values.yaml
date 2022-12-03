@@ -18,7 +18,7 @@ gitea:
     config:
       database:
         DB_TYPE: postgres
-        HOST: sql.yourdomain.test
+        HOST: postgres.postgresql.svc.cluster.local
         NAME: gitea
         USER: gitea
     additionalConfigSources:

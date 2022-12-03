@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: modify-pvs-to-sa
+  name: postgresql-modify-pvs-to-sa
   namespace: postgresql
   annotations:
     argocd.argoproj.io/hook: PreSync
@@ -12,5 +12,5 @@ subjects:
     namespace: postgresql
 roleRef:
   kind: ClusterRole
-  name: modify-pvs
+  name: postgresql-modify-pvs
   apiGroup: rbac.authorization.k8s.io

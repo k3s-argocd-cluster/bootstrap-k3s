@@ -1,0 +1,4 @@
+resources:
+- resources/service.yaml
+- resources/minio-root-secret.yaml
+- resources/deployment.yaml

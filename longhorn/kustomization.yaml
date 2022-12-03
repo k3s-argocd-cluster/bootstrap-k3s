@@ -2,6 +2,7 @@
 resources:
   - https://raw.githubusercontent.com/k3s-argocd-cluster/longhorn/v1.4.0-dev/deploy/longhorn.yaml
   - resources/longhorn-durable.yaml
+  - resources/longhorn-backupstore-secret.yaml
 
 patchesStrategicMerge:
   - patches/default-settings.yaml

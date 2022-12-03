@@ -1,0 +1,5 @@
+resources:
+  - recover-volume-hook
+  - resources/persistent-volume-claim.yaml
+  - resources/deployment.yaml
+  - resources/service.yaml
