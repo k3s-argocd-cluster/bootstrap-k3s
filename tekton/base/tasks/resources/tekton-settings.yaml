@@ -1,0 +1,119 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: tekton-settings
+  annotations:
+    tekton.dev/displayName: "tekton-settings"
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"
+spec:
+  description: >-
+    The tekton-settings task will search for a .tekton file in the source
+    workspace, parse the settings and create extra args for kaniko.
+    Settings will be made available using tekton results for further chaining.
+  params:
+  - name: verbose
+    description: Log the commands that are executed during `tekton-settings`'s operation.
+    type: string
+    default: "true"
+  results:
+  - name: image
+    type: string
+  - name: kaniko_extra_args
+    type: array
+  - name: publications
+    type: array
+  steps:
+  - name: parse-settings
+    image: "mikefarah/yq:4.30.5@sha256:622c9a0ff2bc79004da49325acc210b96317b2b4cef78748a6b09612b534cdc2"
+    env:
+    - name: WORKSPACE_SOURCE_PATH
+      value: $(workspaces.source.path)
+    - name: PARAM_VERBOSE
+      value: $(params.verbose)
+    script: |
+      #!/usr/bin/env sh
+      set -eu
+
+      if [ "${PARAM_VERBOSE}" = "true" ] ; then
+        set -x
+      fi
+
+      # Check the basics first
+      UNKNOWN_REGISTRY=$(yq '[ .publications[].container | (.registry != "internal" and .registry != "docker") ]' ${WORKSPACE_SOURCE_PATH}/.tekton | yq any)
+      if [ "${UNKNOWN_REGISTRY}" = "true" ] ; then
+        echo "Unknown registry found" >&2
+        exit 1
+      fi
+
+      # Handle image name
+      IMAGE_NAME_INVALID=$(yq '.image.name | (has("from") == false and has("value") == false)' ${WORKSPACE_SOURCE_PATH}/.tekton)
+      if [ "${IMAGE_NAME_INVALID}" = "true" ] ; then
+        echo "Invalid image name definition" >&2
+        exit 1
+      fi
+
+      IMAGE_NAME_VALUE=$(yq '.image.name | has("value")' ${WORKSPACE_SOURCE_PATH}/.tekton)
+      if [ "${IMAGE_NAME_VALUE}" = "true" ] ; then
+        export IMAGE_NAME=$(yq '.image.name.value' ${WORKSPACE_SOURCE_PATH}/.tekton)
+      else
+        IMAGE_NAME_FROM=$(yq '.image.name.from' ${WORKSPACE_SOURCE_PATH}/.tekton)
+        if [ "${IMAGE_NAME_FROM}" = "package.json" ] ; then
+          export IMAGE_NAME=$(yq '.name' ${WORKSPACE_SOURCE_PATH}/package.json)
+        else
+          echo "Unknown image name source" >&2
+          exit 1
+        fi
+      fi
+
+      # Handle image version
+      IMAGE_VERSION_INVALID=$(yq '.image.version | (has("from") == false and has("value") == false)' ${WORKSPACE_SOURCE_PATH}/.tekton)
+      if [ "${IMAGE_VERSION_INVALID}" = "true" ] ; then
+        echo "Invalid image version definition" >&2
+        exit 1
+      fi
+
+      IMAGE_VERSION_VALUE=$(yq '.image.version | has("value")' ${WORKSPACE_SOURCE_PATH}/.tekton)
+      if [ "${IMAGE_VERSION_VALUE}" = "true" ] ; then
+        export IMAGE_VERSION=$(yq '.image.version.value' ${WORKSPACE_SOURCE_PATH}/.tekton)
+      else
+        IMAGE_VERSION_FROM=$(yq '.image.version.from' ${WORKSPACE_SOURCE_PATH}/.tekton)
+        if [ "${IMAGE_VERSION_FROM}" = "package.json" ] ; then
+          export IMAGE_VERSION=$(yq '.version' ${WORKSPACE_SOURCE_PATH}/package.json)
+        else
+          echo "Unknown image version source" >&2
+          exit 1
+        fi
+      fi
+
+      if [[ $IMAGE_VERSION != "v"* ]] ; then
+        export IMAGE_VERSION="v$IMAGE_VERSION"
+      fi
+
+      echo "- --cache=true" > /tmp/kaniko_extra_args
+
+      PUBLISH_TO_INTERNAL_REGISTRY=$(yq '[ .publications[].container.registry == "internal" ]' ${WORKSPACE_SOURCE_PATH}/.tekton | yq any)
+      if [ "${PUBLISH_TO_INTERNAL_REGISTRY}" = "true" ] ; then
+        echo "- --registry-certificate" >> /tmp/kaniko_extra_args
+        echo "- git.yourdomain.test=/workspace/certificates/registry.crt" >> /tmp/kaniko_extra_args
+
+        export REGISTRY_URL=git.yourdomain.test
+        export REGISTRY_ORGANISATION=$(yq '.publications[] | select(.container.registry == "internal") | .container.organisation' ${WORKSPACE_SOURCE_PATH}/.tekton)
+        export IMAGE=$(yq '(.publications[] | select(.container.registry == "internal") | .container.image |= envsubst) | .container.image' ${WORKSPACE_SOURCE_PATH}/.tekton)
+
+        PUBLICATION=$(yq '.publications[] | select(.container.registry == "internal") | .container.registry_url = "git.yourdomain.test" | .container.image = strenv(IMAGE) | .container.name = strenv(IMAGE_NAME) | .container.version = strenv(IMAGE_VERSION) | @json | @base64' ${WORKSPACE_SOURCE_PATH}/.tekton)
+        echo "- $PUBLICATION" > /tmp/publications
+
+        printf "%s" "$IMAGE" > $(results.image.path)
+      fi
+
+      PUBLISH_TO_DOCKER_REGISTRY=$(yq '[ .publications[].container.registry == "docker" ]' ${WORKSPACE_SOURCE_PATH}/.tekton | yq any)
+      if [ "${PUBLISH_TO_DOCKER_REGISTRY}" = "true" ] ; then
+        echo "Docker publication not yet implemented" >&2
+        exit 1
+      fi
+
+      yq '@json' /tmp/kaniko_extra_args > $(results.kaniko_extra_args.path)
+      yq '@json' /tmp/publications > $(results.publications.path)
+  workspaces:
+  - name: source
+    description: Repository code

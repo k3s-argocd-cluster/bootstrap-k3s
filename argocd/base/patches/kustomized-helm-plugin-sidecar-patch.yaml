@@ -9,7 +9,7 @@ spec:
       containers:
       - name: kustomized-helm-plugin-cmp
         command: [/var/run/argocd/argocd-cmp-server] # Entrypoint should be Argo CD lightweight CMP server i.e. argocd-cmp-server
-        image: quay.io/argoproj/argocd:v2.5.2
+        image: quay.io/argoproj/argocd:v2.9.1
         securityContext:
           runAsNonRoot: true
           runAsUser: 999

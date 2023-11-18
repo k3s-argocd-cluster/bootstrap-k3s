@@ -7,3 +7,4 @@ data:
   disable-affinity-assistant: true
   disable-creds-init: true
   enable-api-fields: "alpha"
+  embedded-status: "minimal"

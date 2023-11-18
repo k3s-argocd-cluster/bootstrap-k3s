@@ -32,7 +32,7 @@ spec:
                 - 8gb
       containers:
       - name: iobroker
-        image: buanet/iobroker:v7.1.2
+        image: buanet/iobroker:v9.0.1
         securityContext:
           privileged: true
         volumeMounts:

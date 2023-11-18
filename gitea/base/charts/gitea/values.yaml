@@ -21,6 +21,8 @@ gitea:
         HOST: postgres.postgresql.svc.cluster.local
         NAME: gitea
         USER: gitea
+      webhook:
+        ALLOWED_HOST_LIST: "*"
     additionalConfigSources:
     - configMap:
         name: gitea-app-ini

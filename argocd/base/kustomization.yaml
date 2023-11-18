@@ -3,7 +3,7 @@ resources:
   - resources/repository.yaml
   - resources/kustomize-helm-cmp-plugin.yaml
   - sealed/argoproj-ssh-creds.yaml
-  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.5.2/manifests/install.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v2.9.1/manifests/install.yaml
 
 patchesStrategicMerge:
   - patches/kustomized-helm-plugin-sidecar-patch.yaml

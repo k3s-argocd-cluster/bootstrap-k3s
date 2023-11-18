@@ -1,0 +1,5 @@
+resources:
+  - listener-rbac.yaml
+  - oci-build-multiarch-trigger.yaml
+
+namespace: tekton

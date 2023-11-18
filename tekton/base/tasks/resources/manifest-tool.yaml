@@ -14,13 +14,44 @@ spec:
   params:
   - name: platforms
     type: string
-  - name: template
-    type: string
-  - name: target
+  - name: publication
     type: string
   results:
   - name: digest
+    type: string
   steps:
+  - name: parse-publication-settings
+    image: "mikefarah/yq:4.30.5@sha256:622c9a0ff2bc79004da49325acc210b96317b2b4cef78748a6b09612b534cdc2"
+    env:
+    - name: PARAM_PUBLICATION
+      value: $(params.publication)
+    script: |
+      #!/usr/bin/env sh
+      set -eu
+      set -x
+
+      export IMAGE=$(printf "%s" "$PARAM_PUBLICATION" | yq '@base64d | @jsond | .container.image')
+      echo $IMAGE
+
+      cat >/shared/specification.yaml <<EOL
+      image: "$IMAGE"
+      manifests:
+      - image: "$IMAGE-arm64"
+        platform:
+          architecture: arm64
+          os: linux
+      - image: "$IMAGE-amd64"
+        platform:
+          architecture: amd64
+          os: linux
+      EOL
+
+      cat /shared/specification.yaml
+      yq -i '.image |= envsubst | .manifests[].image |= envsubst' /shared/specification.yaml
+      cat /shared/specification.yaml
+    volumeMounts:
+    - name: steps-shared
+      mountPath: /shared
   - name: push-from-args
     image: "mplatform/manifest-tool:alpine-v2.0.6@sha256:61ce656e03d50b3779838413e02d1ff8e57b832b18e1e3e25a1d7d1c5fc3f67d"
     args:
@@ -28,13 +59,8 @@ spec:
       - --docker-cfg
       - $(workspaces.dockerconfig.path)
       - push
-      - from-args
-      - --platforms
-      - $(params.platforms)
-      - --template
-      - $(params.template)
-      - --target
-      - $(params.target)
+      - from-spec
+      - /shared/specification.yaml
     stdoutConfig:
       path: /shared/manifest-tool-stdout
     volumeMounts:
@@ -42,16 +68,23 @@ spec:
       mountPath: /shared
   - name: parse-digest
     image: "busybox:1.35.0@sha256:dd6a1bfed218f1993989a9df6fb2c7cda92ea51bf1dbf281ce71ad7749d1007d"
+    env:
+    - name: PARAM_PUBLICATION
+      value: $(params.publication)
     command:
       - sh
       - -c
-      - printf "%s" "$(cat /shared/manifest-tool-stdout | sed -rn 's/.*sha256:([a-z0-9]+)\s[0-9]*/sha256:\1/p')" > $(results.digest.path)
+      - |
+        REGISTRY=$(printf "%s" "$PARAM_PUBLICATION" | yq '@base64d | @jsond | .container.registry')
+        printf "%s" "$(cat /shared/manifest-tool-stdout | sed -rn 's/.*sha256:([a-z0-9]+)\s[0-9]*/sha256:\1/p')" > $(workspaces.digests.path)/$REGISTRY.sha256
+        cat $(workspaces.digests.path)/$REGISTRY.sha256 > $(results.digest.path)
     volumeMounts:
     - name: steps-shared
       mountPath: /shared
   workspaces:
     - name: dockerconfig
       description: Includes a docker `config.json`
+    - name: digests
   volumes:
   - name: steps-shared
     emptyDir: {}

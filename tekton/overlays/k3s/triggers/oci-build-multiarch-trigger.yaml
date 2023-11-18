@@ -1,0 +1,130 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: oci-build-multiarch-triggertemplate
+spec:
+  params:
+    - name: git-url
+    - name: git-repository-name
+    - name: git-reference
+    - name: git-revision
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: multiarch-oci-$(tt.params.git-repository-name)-
+        namespace: tekton
+      spec:
+        pipelineRef:
+          name: oci-build-multiarch-pipeline
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+          hostAliases:
+          - ip: "192.168.1.211"
+            hostnames:
+            - "git.yourdomain.test"
+        taskRunSpecs:
+          - pipelineTaskName: build-push-arm64
+            taskPodTemplate:
+              securityContext:
+                fsGroup: 65532
+              hostAliases:
+              - ip: "192.168.1.211"
+                hostnames:
+                - "git.yourdomain.test"
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                        - arm64
+          - pipelineTaskName: build-push-amd64
+            taskPodTemplate:
+              securityContext:
+                fsGroup: 65532
+              hostAliases:
+              - ip: "192.168.1.211"
+                hostnames:
+                - "git.yourdomain.test"
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+        workspaces:
+        - name: shared-data
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+              - ReadWriteMany
+              storageClassName: longhorn
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: digests
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+              - ReadWriteMany
+              storageClassName: longhorn
+              resources:
+                requests:
+                  storage: 10Mi
+        - name: docker-credentials
+          secret:
+            secretName: docker-credentials
+        - name: git-credentials
+          secret:
+            secretName: git-credentials
+        - name: certificates
+          secret:
+            secretName: certificates
+        params:
+        - name: git-url
+          value: $(tt.params.git-url)
+        - name: git-reference
+          value: $(tt.params.git-reference)
+        - name: git-revision
+          value: $(tt.params.git-revision)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: oci-build-multiarch-pipelinebinding
+spec:
+  params:
+    - name: git-url
+      value: $(body.repository.clone_url)
+    - name: git-repository-name
+      value: $(body.repository.name)
+    - name: git-reference
+      value: $(body.ref)
+    - name: git-revision
+      value: $(body.after)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: oci-build-multiarch-trigger
+spec:
+  bindings:
+  - ref: oci-build-multiarch-pipelinebinding
+  template:
+    ref: oci-build-multiarch-triggertemplate
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: oci-build-multiarch-listener
+spec:
+  serviceAccountName: tekton-triggers-listener
+  triggers:
+    - triggerRef: oci-build-multiarch-trigger

@@ -6,6 +6,9 @@ pihole:
   admin:
     existingSecret: pihole-secret
 
+  dualStack:
+    enabled: true
+
   dnsmasq:
     additionalHostsEntries:
       - "192.168.1.211 smart.yourdomain.test"
@@ -30,12 +33,16 @@ pihole:
   serviceWeb:
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-svc
+    spec:
+      ipFamilyPolicy: PreferDualStack
     type: ClusterIP
 
   serviceDns:
-    loadBalancerIP: 192.168.1.210
     annotations:
       metallb.universe.tf/allow-shared-ip: pihole-svc
+      metallb.universe.tf/address-pool: pihole
+    spec:
+      ipFamilyPolicy: PreferDualStack
     type: LoadBalancer
 
   serviceDhcp:

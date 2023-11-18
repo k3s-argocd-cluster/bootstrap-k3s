@@ -31,7 +31,7 @@ spec:
                 - 8gb
       containers:
       - name: postgres
-        image: postgres:15.0-alpine3.16
+        image: postgres:15.5-alpine3.18
         ports:
           - containerPort: 5432
             name: postgres
